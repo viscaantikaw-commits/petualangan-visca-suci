@@ -1,0 +1,1120 @@
+#root {
+  min-height: 100svh;
+}
+
+/* ===== Layout dasar (mobile) ===== */
+
+.game-home {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  height: 100svh;
+  height: 100dvh;
+  min-height: 520px;
+  flex-direction: column;
+  overflow: hidden;
+  color: #123c73;
+  background: linear-gradient(180deg, #50baff 0%, #c5efff 61%, #73b96d 100%);
+}
+
+.game-home__landscape {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  background-image:
+    linear-gradient(180deg, rgb(0 102 195 / 5%) 0%, transparent 48%, rgb(13 81 59 / 12%) 100%),
+    url('./assets/game-world.png'),
+    linear-gradient(180deg, #49baff 0%, #bceeff 56%, #e5f7df 100%);
+  background-position: center, 50% 100%, center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%, cover, 100% 100%;
+}
+
+.game-home::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(20 97 171 / 14%) 0%, transparent 28%, transparent 67%, rgb(6 59 44 / 18%) 100%);
+  content: '';
+  pointer-events: none;
+}
+
+/* ===== Header ===== */
+
+.game-header {
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 8px;
+  padding: max(12px, env(safe-area-inset-top)) 12px 0;
+}
+
+/* Di mobile, sumber daya & misi ikut grid header agar misi bisa selebar layar */
+.game-header__right {
+  display: contents;
+}
+
+.player-profile {
+  display: flex;
+  min-width: 0;
+  max-width: 220px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid rgb(255 255 255 / 24%);
+  border-radius: 999px;
+  background: linear-gradient(115deg, rgb(7 63 124 / 91%), rgb(30 96 157 / 89%));
+  box-shadow: 0 8px 22px rgb(15 73 122 / 14%);
+  color: #fff;
+  text-align: left;
+}
+
+.player-profile__avatar {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 52% 42%, #ffd0a0 0 24%, transparent 25%),
+    radial-gradient(ellipse at 51% 38%, #1c2336 0 34%, transparent 35%),
+    linear-gradient(145deg, #80e7b8, #36b9c8);
+  box-shadow: 0 0 0 2px #64e9bb;
+}
+
+.player-profile__avatar span {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  margin-top: 12px;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #f9c296, #e89070);
+  color: #183d64;
+  font-size: 16px;
+  font-weight: 900;
+  box-shadow: 0 -10px 0 2px #20263c;
+}
+
+.player-profile__details {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  line-height: 1.16;
+}
+
+.player-profile__eyebrow,
+.player-profile__level {
+  color: #c5e7ff;
+  font-weight: 650;
+  font-size: 11px;
+}
+
+.player-profile__details strong {
+  overflow: hidden;
+  margin: 1px 0 4px;
+  font-size: 16px;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-profile__progress,
+.daily-mission__progress {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #0a3768;
+}
+
+.player-profile__progress span,
+.daily-mission__progress span {
+  display: block;
+  width: 62%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #59d77c, #8cec81);
+  box-shadow: inset 0 1px 2px rgb(255 255 255 / 35%);
+}
+
+.player-profile__level {
+  margin-top: 4px;
+}
+
+.game-header__resources {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.resource-counter {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 5px;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 999px;
+  background: #073d79;
+  box-shadow: 0 4px 10px rgb(11 70 125 / 20%);
+  color: #fff;
+}
+
+.resource-counter__icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+
+.resource-counter__icon--star {
+  color: #ffbd27;
+  filter: drop-shadow(0 2px 0 #d66b13);
+}
+
+.resource-counter__icon--gem {
+  color: #6ce1ff;
+  filter: drop-shadow(0 2px 0 #1972ca);
+}
+
+.resource-counter__value {
+  min-width: 20px;
+  font-size: 13px;
+  font-weight: 850;
+  text-align: center;
+}
+
+.resource-counter__add {
+  display: none;
+}
+
+.game-header__settings {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 2px solid rgb(255 255 255 / 25%);
+  border-radius: 50%;
+  background: #073d79;
+  color: #fff;
+}
+
+.game-header__settings svg {
+  width: 19px;
+  height: 19px;
+}
+
+.daily-mission {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid rgb(255 255 255 / 75%);
+  border-radius: 16px;
+  background: rgb(249 253 255 / 92%);
+  box-shadow: 0 8px 20px rgb(12 94 161 / 12%);
+  text-align: left;
+}
+
+.daily-mission__icon {
+  display: grid;
+  width: 32px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 2px solid #3c9eff;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #fff, #d7edff);
+  color: #2078ca;
+  box-shadow: 0 3px 0 #1672ce;
+}
+
+.daily-mission__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.daily-mission__content {
+  min-width: 0;
+  flex: 1;
+}
+
+.daily-mission h2 {
+  margin: 0 0 2px;
+  color: #123e76;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.daily-mission p {
+  overflow: hidden;
+  margin: 0;
+  color: #476c99;
+  font-size: 12px;
+  line-height: 1.22;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.daily-mission__progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+  color: #315b8d;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.daily-mission__progress {
+  flex: 1;
+  background: #b9d9f1;
+}
+
+.daily-mission__progress span {
+  width: 33%;
+}
+
+.daily-mission__chevron {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: #204f85;
+}
+
+/* ===== Adegan utama: judul → maskot → tombol ===== */
+
+.adventure-scene {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px 14px;
+}
+
+.game-title {
+  display: flex;
+  width: min(100%, 420px);
+  min-height: 0;
+  flex: 0 1 auto;
+  justify-content: center;
+  margin: 0;
+}
+
+.game-title__art {
+  display: block;
+  width: 100%;
+  max-height: 24svh;
+  height: auto;
+  object-fit: contain;
+}
+
+.adventure-scene__stage {
+  position: relative;
+  display: flex;
+  width: min(100%, 420px);
+  min-height: 0;
+  flex: 1 1 0;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.explorer-character {
+  position: relative;
+  z-index: 1;
+  width: auto;
+  height: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 12px rgb(17 67 53 / 24%));
+  animation: explorer-bob 3.6s ease-in-out infinite;
+}
+
+.adventure-scene__sign {
+  position: absolute;
+  z-index: 2;
+  bottom: 4px;
+  left: 0;
+  width: auto;
+  height: min(42%, 96px);
+  object-fit: contain;
+  filter: drop-shadow(0 7px 4px rgb(50 69 33 / 20%));
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.game-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.game-button:focus-visible,
+.bottom-navigation__item:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 4px;
+}
+
+.game-button--primary {
+  width: min(100%, 360px);
+  flex: 0 0 auto;
+  gap: 12px;
+  min-height: 60px;
+  margin-top: 6px;
+  padding: 8px 20px;
+  border: 3px solid #f28c08;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe64c 0%, #ffc329 75%, #ffab19 100%);
+  box-shadow:
+    0 6px 0 #b75b10,
+    inset 0 4px 0 rgb(255 255 255 / 72%),
+    0 12px 20px rgb(4 58 113 / 18%);
+  color: #123e76;
+  font-size: clamp(18px, 5.4vw, 22px);
+  font-weight: 900;
+  letter-spacing: -.025em;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 60%);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.game-button--primary:active {
+  box-shadow: 0 2px 0 #b75b10, inset 0 4px 0 rgb(255 255 255 / 50%);
+  transform: translateY(4px);
+}
+
+.game-button--primary svg {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  padding: 5px;
+  border: 2px solid #154274;
+  border-radius: 9px;
+  background: #fff;
+  color: #fff;
+  filter: drop-shadow(0 2px 0 #93acd0);
+}
+
+.game-button--primary svg path {
+  fill: #fff;
+  stroke: #1d4e8b;
+  stroke-width: 1.5;
+}
+
+/* ===== Navigasi bawah ===== */
+
+.bottom-navigation {
+  z-index: 3;
+  display: flex;
+  width: 100%;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-around;
+  gap: 2px;
+  margin: 0 auto;
+  padding: 6px 8px max(6px, env(safe-area-inset-bottom));
+  border-top: 2px solid rgb(255 255 255 / 75%);
+  border-radius: 24px 24px 0 0;
+  background: rgb(255 255 255 / 95%);
+  box-shadow: 0 -12px 40px rgb(15 68 91 / 15%);
+  backdrop-filter: blur(10px);
+}
+
+.bottom-navigation__item {
+  display: flex;
+  min-width: 0;
+  min-height: 56px;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  color: #355578;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  touch-action: manipulation;
+  transition: background-color .2s ease, color .2s ease;
+}
+
+.bottom-navigation__item svg {
+  width: 26px;
+  height: 26px;
+  stroke-width: 1.8;
+}
+
+.bottom-navigation__item.is-active {
+  background: #d9edff;
+  color: #0861bd;
+}
+
+/* ===== Layar peta ===== */
+
+.game-home--peta {
+  background:
+    radial-gradient(ellipse 34% 7% at 12% 38%, rgb(255 255 255 / 85%), transparent 70%),
+    radial-gradient(ellipse 30% 6% at 92% 52%, rgb(255 255 255 / 80%), transparent 70%),
+    radial-gradient(ellipse 40% 8% at 8% 74%, rgb(255 255 255 / 80%), transparent 70%),
+    radial-gradient(ellipse 36% 7% at 96% 88%, rgb(255 255 255 / 85%), transparent 70%),
+    linear-gradient(180deg, #4fb4f6 0%, #8fd4fb 45%, #bfe9fd 100%);
+}
+
+.map-screen {
+  min-height: 0;
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.map-screen::-webkit-scrollbar {
+  display: none;
+}
+
+.map-screen__top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 12px 4px 64px;
+}
+
+.map-screen__back {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #fff, #e6f3ff);
+  box-shadow: 0 4px 0 #9cc6ec, 0 8px 16px rgb(11 70 125 / 18%);
+  color: #1765c4;
+  cursor: pointer;
+  transform: translateY(-50%);
+  touch-action: manipulation;
+}
+
+.map-screen__back svg {
+  width: 24px;
+  height: 24px;
+  transform: scaleX(-1);
+}
+
+.map-title {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  transform: rotate(-2deg);
+}
+
+.map-title__plank {
+  margin: 0;
+  padding: 6px 18px 8px;
+  border: 3px solid #7b3b10;
+  border-radius: 14px 18px 12px 16px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 9px, rgb(122 59 16 / 14%) 9px 11px),
+    linear-gradient(180deg, #f6b25a 0%, #e48a33 55%, #c96a22 100%);
+  box-shadow: inset 0 3px 0 rgb(255 228 170 / 60%), 0 5px 0 #6a320e, 0 10px 18px rgb(66 34 8 / 25%);
+  color: #fff;
+  font-size: clamp(20px, 6.4vw, 30px);
+  font-weight: 900;
+  letter-spacing: -.02em;
+  line-height: 1.1;
+  text-shadow:
+    0 2px 0 #7b3b10,
+    2px 0 0 #7b3b10,
+    -2px 0 0 #7b3b10,
+    0 -2px 0 #7b3b10,
+    0 4px 0 #5a2a0a;
+  white-space: nowrap;
+}
+
+.map-title__ribbon {
+  position: relative;
+  z-index: 1;
+  margin: -6px 0 0;
+  padding: 3px 14px;
+  border: 2px solid #0d3f86;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #2f7fe0, #1a56b4);
+  box-shadow: 0 3px 0 #0b356f;
+  color: #fff;
+  font-size: clamp(10px, 3vw, 13px);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Kanvas peta memakai unit cqw agar tombol & teks ikut skala gambar */
+.world-map {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto 56px;
+  container-type: inline-size;
+}
+
+.world-island {
+  position: absolute;
+  pointer-events: none;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%),
+    linear-gradient(180deg, transparent 0, #000 5%, #000 94%, transparent 100%);
+  mask-image:
+    linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%),
+    linear-gradient(180deg, transparent 0, #000 5%, #000 94%, transparent 100%);
+  user-select: none;
+}
+
+.world-island__art {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ----- Tombol level (aktif = biru-emas, tidak aktif = perak) ----- */
+
+.level-node {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  width: 6.8cqw;
+  height: 6.8cqw;
+  place-items: center;
+  padding: 0;
+  border: .6cqw solid transparent;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 40% 28%, #7690ad 0%, #46617f 45%, #2b4361 100%) padding-box,
+    linear-gradient(165deg, #fbfdff 0%, #b8c5d3 45%, #8e9eb1 70%, #e4eaf0 100%) border-box;
+  box-shadow:
+    0 .55cqw 0 #56677b,
+    0 1cqw 1.2cqw rgb(20 44 72 / 40%),
+    inset 0 .5cqw .7cqw rgb(255 255 255 / 22%),
+    inset 0 -.6cqw .9cqw rgb(0 0 0 / 28%);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 3.3cqw;
+  font-weight: 900;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+  touch-action: manipulation;
+  transition: transform .15s ease, filter .15s ease;
+}
+
+/* Area sentuh minimal ~44px walau tombol terlihat kecil */
+.level-node::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  border-radius: 50%;
+  content: '';
+  transform: translate(-50%, -50%);
+}
+
+.level-node__number {
+  position: relative;
+  text-shadow:
+    0 .3cqw 0 #1a2c45,
+    .15cqw 0 0 #1a2c45,
+    -.15cqw 0 0 #1a2c45;
+}
+
+.level-node--aktif {
+  z-index: 2;
+  width: 7.4cqw;
+  height: 7.4cqw;
+  border-width: .7cqw;
+  background:
+    radial-gradient(circle at 38% 26%, #5aa8ff 0%, #2477ec 42%, #0f55c9 100%) padding-box,
+    linear-gradient(170deg, #fff 0%, #fff8e6 55%, #f3e2b8 100%) border-box;
+  box-shadow:
+    0 .5cqw 0 #ffc21f,
+    0 1cqw 0 #ec8710,
+    0 1.4cqw 1.4cqw rgb(120 60 0 / 35%),
+    inset 0 .5cqw .8cqw rgb(255 255 255 / 30%),
+    inset 0 -.6cqw .9cqw rgb(0 30 90 / 30%);
+  font-size: 3.7cqw;
+}
+
+.level-node--aktif .level-node__number {
+  text-shadow:
+    0 .3cqw 0 #0a3a8c,
+    .15cqw 0 0 #0a3a8c,
+    -.15cqw 0 0 #0a3a8c;
+}
+
+.level-node--aktif::after {
+  position: absolute;
+  inset: -1.4cqw;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle closest-side, transparent 68%, rgb(255 226 92 / 85%) 78%, transparent 100%);
+  content: '';
+  animation: level-glow 1.8s ease-in-out infinite;
+}
+
+.level-node--terkunci {
+  cursor: default;
+}
+
+.level-node__lock {
+  position: absolute;
+  top: -2.6cqw;
+  left: 50%;
+  width: 3.4cqw;
+  height: 3.4cqw;
+  color: #34465f;
+  filter: drop-shadow(0 .2cqw 0 rgb(12 28 48 / 45%));
+  transform: translateX(-50%);
+}
+
+.level-node__lock .icon-lock__shackle {
+  color: #e7edf3;
+}
+
+.level-node__lock .icon-lock__body {
+  stroke: #e7edf3;
+}
+
+.level-node__lock .icon-lock__hole {
+  stroke: #e7edf3;
+}
+
+.level-node:not(:disabled):active {
+  transform: translate(-50%, -42%);
+}
+
+.level-node:focus-visible,
+.map-screen__back:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+/* ----- Koleksi bentuk ----- */
+
+.shape-collection {
+  position: absolute;
+  top: 95.5%;
+  left: 2.5%;
+  z-index: 3;
+  display: flex;
+  width: min(46%, 240px);
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 8px 8px;
+  border: 1px solid rgb(255 255 255 / 80%);
+  border-radius: 16px;
+  background: rgb(249 253 255 / 94%);
+  box-shadow: 0 8px 20px rgb(12 94 161 / 16%);
+  text-align: left;
+}
+
+.shape-collection__icon {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 2px 0 rgb(107 53 16 / 35%));
+}
+
+.shape-collection__content {
+  min-width: 0;
+  flex: 1;
+}
+
+.shape-collection h2 {
+  overflow: hidden;
+  margin: 0 0 4px;
+  color: #123e76;
+  font-size: 13px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shape-collection__progress {
+  height: 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #cfe3f5;
+}
+
+.shape-collection__progress span {
+  display: flex;
+  width: 33%;
+  min-width: 40px;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1f6fdc, #3d95ff);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.shape-collection__chevron {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  color: #204f85;
+}
+
+@keyframes level-glow {
+  0%, 100% {
+    opacity: .55;
+    transform: scale(.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes explorer-bob {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* ===== Layar mobile sangat kecil (≤ 340px) ===== */
+
+@media (max-width: 340px) {
+  .player-profile__avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .player-profile__avatar span {
+    width: 23px;
+    height: 23px;
+    margin-top: 10px;
+    font-size: 14px;
+  }
+
+  .resource-counter {
+    gap: 2px;
+    padding-inline: 4px 6px;
+  }
+
+  .resource-counter__icon {
+    width: 17px;
+    height: 17px;
+  }
+
+  .resource-counter__value {
+    min-width: 16px;
+    font-size: 12px;
+  }
+
+  .game-header__settings {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+/* ===== Mobile pendek (mis. iPhone SE) ===== */
+
+@media (max-height: 680px) {
+  .daily-mission__progress-row {
+    display: none;
+  }
+
+  .game-title__art {
+    max-height: 22svh;
+  }
+
+  .game-button--primary {
+    min-height: 54px;
+  }
+
+  .bottom-navigation__item {
+    min-height: 50px;
+  }
+}
+
+/* ===== Hover hanya untuk perangkat dengan pointer ===== */
+
+@media (hover: hover) {
+  .game-button--primary:hover {
+    box-shadow:
+      0 8px 0 #b75b10,
+      inset 0 4px 0 rgb(255 255 255 / 72%),
+      0 15px 24px rgb(4 58 113 / 20%);
+    transform: translateY(-2px);
+  }
+
+  .bottom-navigation__item:hover:not(.is-active) {
+    background: #eef7ff;
+  }
+
+  .level-node:not(:disabled):hover {
+    filter: brightness(1.08);
+    transform: translate(-50%, -56%);
+  }
+}
+
+/* ===== Tablet ke atas ===== */
+
+@media (min-width: 600px) {
+  .game-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 16px;
+    padding: max(20px, env(safe-area-inset-top)) 24px 0;
+  }
+
+  .game-header__right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+  }
+
+  .player-profile {
+    max-width: 300px;
+    gap: 12px;
+    padding: 8px 18px 8px 8px;
+  }
+
+  .player-profile__avatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .player-profile__avatar span {
+    width: 36px;
+    height: 36px;
+    margin-top: 15px;
+    font-size: 21px;
+    box-shadow: 0 -13px 0 2px #20263c;
+  }
+
+  .player-profile__eyebrow,
+  .player-profile__level {
+    font-size: 13px;
+  }
+
+  .player-profile__details strong {
+    font-size: 21px;
+  }
+
+  .player-profile__progress,
+  .daily-mission__progress {
+    height: 9px;
+  }
+
+  .game-header__resources {
+    gap: 8px;
+  }
+
+  .resource-counter {
+    gap: 8px;
+    padding: 5px 6px 5px 8px;
+  }
+
+  .resource-counter__icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .resource-counter__value {
+    font-size: 17px;
+  }
+
+  .resource-counter__add {
+    display: grid;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #79e493, #32b96c);
+    color: #fff;
+    box-shadow: inset 0 2px 3px rgb(255 255 255 / 42%);
+  }
+
+  .resource-counter__add svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .game-header__settings {
+    width: 42px;
+    height: 42px;
+  }
+
+  .game-header__settings svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .daily-mission {
+    width: 320px;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 22px;
+  }
+
+  .daily-mission__icon {
+    width: 42px;
+    height: 48px;
+  }
+
+  .daily-mission__icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .daily-mission h2 {
+    font-size: 17px;
+  }
+
+  .daily-mission p {
+    font-size: 13px;
+    white-space: normal;
+  }
+
+  .adventure-scene {
+    padding: 12px 24px 20px;
+  }
+
+  .game-title {
+    width: min(100%, 620px);
+  }
+
+  .game-title__art {
+    max-height: 30svh;
+  }
+
+  .adventure-scene__stage {
+    width: min(100%, 720px);
+    justify-content: center;
+  }
+
+  .explorer-character {
+    max-height: 320px;
+  }
+
+  .adventure-scene__sign {
+    height: min(55%, 170px);
+  }
+
+  .game-button--primary {
+    width: min(100%, 460px);
+    min-height: 76px;
+    margin-top: 10px;
+    font-size: 26px;
+  }
+
+  .game-button--primary svg {
+    width: 40px;
+    height: 40px;
+    padding: 6px;
+    border-radius: 11px;
+  }
+
+  .bottom-navigation {
+    width: min(720px, calc(100% - 48px));
+    padding: 10px 14px max(10px, env(safe-area-inset-bottom));
+    border: 2px solid rgb(255 255 255 / 75%);
+    border-bottom: 0;
+    border-radius: 32px 32px 0 0;
+  }
+
+  .bottom-navigation__item {
+    max-width: 130px;
+    min-height: 72px;
+    gap: 4px;
+    border-radius: 24px;
+    font-size: 14px;
+  }
+
+  .bottom-navigation__item svg {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* ===== Desktop ===== */
+
+@media (min-width: 1024px) {
+  .game-home {
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  .game-header {
+    padding: max(28px, env(safe-area-inset-top)) clamp(32px, 4.4vw, 66px) 0;
+  }
+
+  .player-profile {
+    max-width: 340px;
+  }
+
+  .daily-mission {
+    width: 360px;
+  }
+
+  .adventure-scene__stage {
+    width: min(100%, 1100px);
+  }
+
+  .adventure-scene__sign {
+    height: min(65%, 220px);
+  }
+
+  .bottom-navigation {
+    margin-bottom: 16px;
+    border-bottom: 2px solid rgb(255 255 255 / 75%);
+    border-radius: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
