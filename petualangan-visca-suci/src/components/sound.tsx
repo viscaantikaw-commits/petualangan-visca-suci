@@ -1,19 +1,17 @@
-// Efek suara bertema "game retro 8-bit": gelombang pulsa, bass segitiga, dan derau ala konsol jadul.
+// Efek suara bertema "petualangan ajaib": harpa, lonceng kristal, dan pad lembut dengan gema (reverb).
 // Semuanya dibuat langsung dengan Web Audio API, jadi tidak butuh file audio tambahan.
 // Pengaturan volume disimpan di perangkat supaya tetap sama saat game dibuka lagi.
 
 type Settings = { volume: number; muted: boolean }
 type ToneOptions = { type?: OscillatorType; gain?: number; endFreq?: number }
-type ChipOptions = { duty?: number; gain?: number; endFreq?: number; vibrato?: boolean; sustain?: number }
-type NoiseOptions = { filter?: number; q?: number; gain?: number; kind?: BiquadFilterType }
+type NoiseOptions = { filter?: number; filterEnd?: number; q?: number; gain?: number; kind?: BiquadFilterType }
 
 const STORAGE_KEY = 'petualangan-bangun-datar:sound'
-// Gelombang pulsa terdengar lebih pelan dari efek lain pada gain yang sama, jadi dinaikkan agar seimbang.
-const CHIP_BOOST = 1.8
 
+// Nada-nada tangga pentatonik C mayor: enak didengar dan tidak pernah "fals" jika bertumpuk.
 const N = {
-  G3: 196, C4: 261.63, E4: 329.63, G4: 392, C5: 523.25, E5: 659.25, G5: 783.99,
-  B5: 987.77, C6: 1046.5, E6: 1318.51, G6: 1567.98,
+  C4: 261.63, E4: 329.63, G4: 392, C5: 523.25, D5: 587.33, E5: 659.25, G5: 783.99, A5: 880,
+  C6: 1046.5, D6: 1174.66, E6: 1318.51, G6: 1567.98, A6: 1760, C7: 2093,
 }
 
 function clamp(value: number) {
@@ -38,7 +36,6 @@ let ctx: AudioContext | null = null
 let master: GainNode | null = null
 let bus: GainNode | null = null
 let noiseBuffer: AudioBuffer | null = null
-const pulseWaves = new Map<number, PeriodicWave>()
 
 function saveSettings() {
   try {
@@ -50,6 +47,19 @@ function saveSettings() {
 
 function level() {
   return settings.muted ? 0 : settings.volume * settings.volume
+}
+
+// Gema ruangan: derau yang meredup pelan, dibuat sendiri sebagai "impulse response".
+function createReverb(context: AudioContext) {
+  const length = Math.floor(context.sampleRate * 1.7)
+  const impulse = context.createBuffer(2, length, context.sampleRate)
+  for (let channel = 0; channel < 2; channel += 1) {
+    const data = impulse.getChannelData(channel)
+    for (let i = 0; i < length; i += 1) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.6)
+  }
+  const convolver = context.createConvolver()
+  convolver.buffer = impulse
+  return convolver
 }
 
 function ensureContext() {
@@ -64,60 +74,21 @@ function ensureContext() {
     limiter.ratio.value = 4
     master.connect(limiter)
     limiter.connect(ctx.destination)
+
     bus = ctx.createGain()
     bus.connect(master)
+    const send = ctx.createGain()
+    send.gain.value = 0.32
+    bus.connect(send)
+    const reverb = createReverb(ctx)
+    send.connect(reverb)
+    reverb.connect(master)
   }
   if (ctx.state === 'suspended') void ctx.resume()
   return ctx
 }
 
-// Gelombang pulsa dengan lebar tertentu (duty): 12,5% = tipis/nyaring, 25% = hidung, 50% = kotak penuh.
-function pulseWave(context: AudioContext, duty: number) {
-  let wave = pulseWaves.get(duty)
-  if (!wave) {
-    const size = 48
-    const real = new Float32Array(size)
-    const imag = new Float32Array(size)
-    for (let n = 1; n < size; n += 1) real[n] = (2 / (n * Math.PI)) * Math.sin(n * Math.PI * duty)
-    wave = context.createPeriodicWave(real, imag)
-    pulseWaves.set(duty, wave)
-  }
-  return wave
-}
-
-// Satu "kanal" suara 8-bit: nada pulsa dengan volume turun linear seperti chip jadul.
-function chip(freq: number, start: number, duration: number, { duty = 0.5, gain = 0.14, endFreq, vibrato = false, sustain = 0.6 }: ChipOptions = {}) {
-  const context = ensureContext()
-  if (!context || !bus) return
-  const t = context.currentTime + start
-  const osc = context.createOscillator()
-  const env = context.createGain()
-  osc.setPeriodicWave(pulseWave(context, duty))
-  osc.frequency.setValueAtTime(freq, t)
-  if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, t + duration)
-  env.gain.setValueAtTime(0.0001, t)
-  const peak = gain * CHIP_BOOST
-  env.gain.linearRampToValueAtTime(peak, t + 0.004)
-  env.gain.linearRampToValueAtTime(peak * sustain, t + duration * 0.8)
-  env.gain.linearRampToValueAtTime(0.0001, t + duration)
-  osc.connect(env)
-  env.connect(bus)
-  if (vibrato) {
-    const lfo = context.createOscillator()
-    const depth = context.createGain()
-    lfo.frequency.value = 6.5
-    depth.gain.value = freq * 0.012
-    lfo.connect(depth)
-    depth.connect(osc.frequency)
-    lfo.start(t + 0.12)
-    lfo.stop(t + duration + 0.05)
-  }
-  osc.start(t)
-  osc.stop(t + duration + 0.05)
-}
-
-// Bass segitiga ala konsol jadul.
-function tone(freq: number, start: number, duration: number, { type = 'triangle', gain = 0.22, endFreq }: ToneOptions = {}) {
+function tone(freq: number, start: number, duration: number, { type = 'sine', gain = 0.3, endFreq }: ToneOptions = {}) {
   const context = ensureContext()
   if (!context || !bus) return
   const t = context.currentTime + start
@@ -127,7 +98,7 @@ function tone(freq: number, start: number, duration: number, { type = 'triangle'
   osc.frequency.setValueAtTime(freq, t)
   if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, t + duration)
   env.gain.setValueAtTime(0.0001, t)
-  env.gain.exponentialRampToValueAtTime(gain, t + 0.01)
+  env.gain.exponentialRampToValueAtTime(gain, t + 0.012)
   env.gain.exponentialRampToValueAtTime(0.0001, t + duration)
   osc.connect(env)
   env.connect(bus)
@@ -135,18 +106,14 @@ function tone(freq: number, start: number, duration: number, { type = 'triangle'
   osc.stop(t + duration + 0.05)
 }
 
-// Derau "kasar" (nilainya bertahan beberapa sampel) seperti kanal drum konsol 8-bit.
-function noise(start: number, duration: number, { filter = 1200, q = 1, gain = 0.2, kind = 'bandpass' }: NoiseOptions = {}) {
+// Derau yang disaring (bisa menyapu naik): dipakai untuk "whoosh", ketukan, dan kilau.
+function noise(start: number, duration: number, { filter = 1200, filterEnd, q = 1, gain = 0.3, kind = 'bandpass' }: NoiseOptions = {}) {
   const context = ensureContext()
   if (!context || !bus) return
   if (!noiseBuffer) {
     noiseBuffer = context.createBuffer(1, context.sampleRate, context.sampleRate)
     const data = noiseBuffer.getChannelData(0)
-    let value = 0
-    for (let i = 0; i < data.length; i += 1) {
-      if (i % 6 === 0) value = Math.random() * 2 - 1
-      data[i] = value
-    }
+    for (let i = 0; i < data.length; i += 1) data[i] = Math.random() * 2 - 1
   }
   const t = context.currentTime + start
   const source = context.createBufferSource()
@@ -154,16 +121,108 @@ function noise(start: number, duration: number, { filter = 1200, q = 1, gain = 0
   const env = context.createGain()
   source.buffer = noiseBuffer
   shaper.type = kind
-  shaper.frequency.value = filter
   shaper.Q.value = q
+  shaper.frequency.setValueAtTime(filter, t)
+  if (filterEnd) shaper.frequency.exponentialRampToValueAtTime(filterEnd, t + duration)
   env.gain.setValueAtTime(0.0001, t)
-  env.gain.exponentialRampToValueAtTime(gain, t + 0.006)
+  env.gain.exponentialRampToValueAtTime(gain, t + Math.min(0.03, duration / 3))
   env.gain.exponentialRampToValueAtTime(0.0001, t + duration)
   source.connect(shaper)
   shaper.connect(env)
   env.connect(bus)
   source.start(t)
   source.stop(t + duration + 0.05)
+}
+
+// Lonceng kristal (sintesis FM): bunyi "ting" berkilau seperti kotak musik/celesta.
+function bell(freq: number, start: number, duration: number, gain = 0.25) {
+  const context = ensureContext()
+  if (!context || !bus) return
+  const t = context.currentTime + start
+  const carrier = context.createOscillator()
+  const modulator = context.createOscillator()
+  const depth = context.createGain()
+  const env = context.createGain()
+  carrier.type = 'sine'
+  modulator.type = 'sine'
+  carrier.frequency.value = freq
+  modulator.frequency.value = freq * 3.5
+  depth.gain.setValueAtTime(freq * 2.2, t)
+  depth.gain.exponentialRampToValueAtTime(freq * 0.05, t + duration * 0.7)
+  env.gain.setValueAtTime(0.0001, t)
+  env.gain.exponentialRampToValueAtTime(gain, t + 0.006)
+  env.gain.exponentialRampToValueAtTime(0.0001, t + duration)
+  modulator.connect(depth)
+  depth.connect(carrier.frequency)
+  carrier.connect(env)
+  env.connect(bus)
+  carrier.start(t)
+  modulator.start(t)
+  carrier.stop(t + duration + 0.05)
+  modulator.stop(t + duration + 0.05)
+}
+
+// Petikan harpa: nada lembut yang cerah di awal lalu meredup.
+function harp(freq: number, start: number, duration = 0.6, gain = 0.2) {
+  const context = ensureContext()
+  if (!context || !bus) return
+  const t = context.currentTime + start
+  const body = context.createOscillator()
+  const overtone = context.createOscillator()
+  const shaper = context.createBiquadFilter()
+  const env = context.createGain()
+  body.type = 'triangle'
+  overtone.type = 'sine'
+  body.frequency.value = freq
+  overtone.frequency.value = freq * 2
+  shaper.type = 'lowpass'
+  shaper.frequency.setValueAtTime(freq * 7, t)
+  shaper.frequency.exponentialRampToValueAtTime(freq * 1.8, t + duration)
+  env.gain.setValueAtTime(0.0001, t)
+  env.gain.exponentialRampToValueAtTime(gain, t + 0.004)
+  env.gain.exponentialRampToValueAtTime(0.0001, t + duration)
+  body.connect(shaper)
+  overtone.connect(shaper)
+  shaper.connect(env)
+  env.connect(bus)
+  body.start(t)
+  overtone.start(t)
+  body.stop(t + duration + 0.05)
+  overtone.stop(t + duration + 0.05)
+}
+
+// Pad lembut yang "mengembang": akord hangat di latar belakang.
+function pad(freqs: number[], start: number, duration: number, gain = 0.07) {
+  const context = ensureContext()
+  if (!context || !bus) return
+  const t = context.currentTime + start
+  const shaper = context.createBiquadFilter()
+  const env = context.createGain()
+  shaper.type = 'lowpass'
+  shaper.frequency.setValueAtTime(300, t)
+  shaper.frequency.exponentialRampToValueAtTime(2600, t + duration * 0.55)
+  env.gain.setValueAtTime(0.0001, t)
+  env.gain.exponentialRampToValueAtTime(gain, t + duration * 0.4)
+  env.gain.exponentialRampToValueAtTime(0.0001, t + duration)
+  shaper.connect(env)
+  env.connect(bus)
+  freqs.forEach((freq) => {
+    ;[-7, 7].forEach((detune) => {
+      const osc = context.createOscillator()
+      osc.type = 'sawtooth'
+      osc.frequency.value = freq
+      osc.detune.value = detune
+      osc.connect(shaper)
+      osc.start(t)
+      osc.stop(t + duration + 0.05)
+    })
+  })
+}
+
+// Ketukan kayu yang imut (dipakai untuk langkah kaki).
+function woodTap(freq: number, start: number) {
+  tone(freq * 1.5, start, 0.06, { gain: 0.38, endFreq: freq })
+  noise(start, 0.03, { filter: 2400, q: 3, gain: 0.07 })
 }
 
 export function getVolume() {
@@ -186,63 +245,59 @@ export function setMuted(muted: boolean) {
   if (master && ctx) master.gain.setTargetAtTime(level(), ctx.currentTime, 0.02)
 }
 
-// Langkah kaki "bip-bip-bip-bip" ala game konsol jadul.
+// Langkah kaki kecil "tuk-tuk-tuk-tuk" saat hero berjalan menuju target.
 export function playWalk() {
-  ;[330, 392, 330, 392].forEach((freq, i) => {
-    chip(freq, i * 0.17, 0.07, { duty: 0.25, gain: 0.11, sustain: 0.3 })
-    tone(110, i * 0.17, 0.07, { gain: 0.18 })
-  })
+  ;[700, 620, 740, 640].forEach((freq, i) => woodTap(freq, i * 0.17))
 }
 
-// Lompat: sapuan nada naik yang cepat seperti game platform klasik.
+// Lompat: "wuuush" naik dengan petikan harpa berkilau.
 export function playJump() {
-  chip(260, 0, 0.2, { gain: 0.14, endFreq: 820, sustain: 0.8 })
-  chip(520, 0, 0.2, { duty: 0.125, gain: 0.05, endFreq: 1640, sustain: 0.8 })
+  noise(0, 0.3, { filter: 500, filterEnd: 3600, q: 1.2, gain: 0.2 })
+  ;[N.C5, N.E5, N.G5, N.C6, N.E6].forEach((freq, i) => harp(freq, i * 0.045, 0.4, 0.17))
 }
 
-// Bentuk target terkumpul: "ba-ding!" seperti koin.
+// Bentuk target terkumpul: "pling-ling!" lonceng kristal.
 export function playCollect() {
-  chip(N.B5, 0, 0.07, { gain: 0.14, sustain: 1 })
-  chip(N.E6, 0.07, 0.42, { gain: 0.14, sustain: 0.4 })
-  chip(N.E6, 0.16, 0.33, { duty: 0.125, gain: 0.04, sustain: 0.4 })
+  bell(N.E6, 0, 0.55, 0.32)
+  bell(N.A6, 0.09, 0.8, 0.32)
+  noise(0.08, 0.15, { filter: 7000, gain: 0.05, kind: 'highpass' })
 }
 
-// Sampai di bendera: fanfare pendek dengan arpeggio, trill, dan bass.
+// Sampai di bendera: gerbang ajaib terbuka dengan pad yang mengembang dan glissando harpa.
 export function playFlag() {
-  tone(N.C4, 0, 1.25, { gain: 0.22 })
-  ;[N.C5, N.E5, N.G5, N.C6].forEach((freq, i) => chip(freq, i * 0.075, 0.075, { gain: 0.13, sustain: 1 }))
-  ;[N.G5, N.C6, N.G5, N.C6, N.G5, N.C6].forEach((freq, i) => chip(freq, 0.32 + i * 0.06, 0.06, { duty: 0.25, gain: 0.12, sustain: 1 }))
-  chip(N.C6, 0.7, 0.6, { duty: 0.25, gain: 0.13, vibrato: true })
+  pad([N.C4, N.E4, N.G4], 0, 1.5, 0.08)
+  noise(0, 0.8, { filter: 300, filterEnd: 5000, q: 0.8, gain: 0.1 })
+  ;[N.C4, N.E4, N.G4, N.C5, N.E5, N.G5, N.C6].forEach((freq, i) => harp(freq, 0.35 + i * 0.06, 0.7, 0.2))
+  bell(N.C6, 0.85, 1.1, 0.24)
+  bell(N.G6, 0.9, 1.1, 0.16)
 }
 
-// Jawaban benar: arpeggio naik cepat lalu nada tinggi berkilau.
+// Jawaban benar: harpa naik, akord hangat, dan lonceng penutup.
 export function playCorrect() {
-  ;[N.C5, N.E5, N.G5, N.C6, N.E6].forEach((freq, i) => chip(freq, i * 0.055, 0.06, { gain: 0.13, sustain: 1 }))
-  chip(N.G6, 0.3, 0.4, { duty: 0.25, gain: 0.13, vibrato: true })
-  noise(0.3, 0.12, { filter: 7000, gain: 0.04, kind: 'highpass' })
+  ;[N.C5, N.E5, N.G5, N.C6, N.E6].forEach((freq, i) => harp(freq, i * 0.06, 0.7, 0.22))
+  pad([N.C5, N.E5, N.G5], 0.1, 0.9, 0.04)
+  bell(N.C7, 0.32, 0.9, 0.15)
 }
 
-// Jawaban salah: tiga nada turun ala "game over" yang singkat.
+// Jawaban salah: "uh-oh" yang lembut dan ramah (tidak menakutkan untuk anak).
 export function playWrong() {
-  chip(196, 0, 0.13, { duty: 0.25, gain: 0.15, sustain: 1 })
-  chip(156, 0.14, 0.13, { duty: 0.25, gain: 0.15, sustain: 1 })
-  chip(131, 0.28, 0.4, { duty: 0.25, gain: 0.15, endFreq: 82, sustain: 0.9 })
-  noise(0.28, 0.3, { filter: 300, gain: 0.12, kind: 'lowpass' })
+  woodTap(300, 0)
+  tone(392, 0.04, 0.24, { type: 'triangle', gain: 0.36, endFreq: 360 })
+  tone(311, 0.26, 0.45, { type: 'triangle', gain: 0.36, endFreq: 255 })
+  tone(155, 0.26, 0.45, { gain: 0.14, endFreq: 128 })
 }
 
-// Level selesai: arpeggio naik, "ta-ta-ta-TAA!" dan benturan simbal.
+// Level selesai: glissando harpa, akord megah, melodi lonceng, dan confetti berkilau.
 export function playComplete() {
-  ;[N.C5, N.E5, N.G5, N.C6, N.E6, N.G6].forEach((freq, i) => chip(freq, i * 0.07, 0.08, { gain: 0.12, sustain: 1 }))
-  tone(N.G3, 0.55, 0.45, { gain: 0.22 })
-  ;[0.55, 0.7, 0.85].forEach((t) => chip(N.G5, t, 0.12, { gain: 0.13, sustain: 0.8 }))
-  tone(N.C4, 1, 1.1, { gain: 0.22 })
-  chip(N.C6, 1, 0.9, { duty: 0.25, gain: 0.14, vibrato: true })
-  chip(N.E6, 1, 0.9, { duty: 0.125, gain: 0.07, vibrato: true })
-  chip(N.G5, 1, 0.9, { duty: 0.5, gain: 0.07, vibrato: true })
-  noise(1, 0.5, { filter: 6000, gain: 0.08, kind: 'highpass' })
+  ;[N.C5, N.D5, N.E5, N.G5, N.A5, N.C6, N.D6, N.E6, N.G6, N.A6, N.C7].forEach((freq, i) => harp(freq, i * 0.05, 0.6, 0.18))
+  pad([N.C4, N.E4, N.G4, N.C5], 0.1, 2.3, 0.075)
+  ;[N.C6, N.E6, N.G6, N.C7].forEach((freq, i) => bell(freq, 0.65 + i * 0.13, i === 3 ? 1.5 : 0.6, 0.22))
+  noise(0.65, 0.3, { filter: 4000, gain: 0.12, kind: 'highpass' })
+  const sparkles = [N.C7, N.G6, N.E6, N.A6]
+  for (let i = 0; i < 14; i += 1) bell(sparkles[i % sparkles.length], 0.9 + Math.random() * 1.4, 0.35, 0.07)
 }
 
 // Bunyi singkat saat slider volume dilepas.
 export function playPreview() {
-  chip(N.E6, 0, 0.14, { gain: 0.14, sustain: 0.4 })
+  bell(N.C6, 0, 0.5, 0.24)
 }
